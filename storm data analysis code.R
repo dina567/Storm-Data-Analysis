@@ -127,12 +127,13 @@ df_ordered
 
 library(ggplot2)
 
-# assign status to new column: status
-# use mutate() and cbind() to ordered df with new columns
+# assign storm status to new column called status
+# use cbind() to add a new column
 # combine three status df together
-a <- mutate(df_ordered[[1]], data.frame(status = names(df_ordered[1])))
-b <- mutate(df_ordered[[2]], data.frame(status = names(df_ordered[2])))
-c <- mutate(df_ordered[[3]], data.frame(status = names(df_ordered[3])))
+
+a <- cbind(df_ordered[[1]], data.frame(status = names(df_ordered[1])))
+b <- cbind(df_ordered[[2]], data.frame(status = names(df_ordered[2])))
+c <- cbind(df_ordered[[3]], data.frame(status = names(df_ordered[3])))
 final_data <- rbind(a, b, c)
 
 # visualize accumulated storm number per month from 1990 to 2010
