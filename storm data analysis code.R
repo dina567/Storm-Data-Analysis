@@ -49,38 +49,108 @@ colnames(storms)
 rownames(storms)
 
 # 3. Analysis:
-# (1) Does the month affect the status of storm (Tropical Depression, Tropical Storm, or Hurricane) for storms tracked from 2000 to 2020
+# (1) Which month has highest storm developed from year from 1990 to 2010 (accumulated)
+# and what were the status they develop (Tropical Depression, Tropical Storm, or to Hurricane)
 
-# filter the storm tracked from 1990 to 2010
-
-storms %>% filter(year >= 2000 & year <= 2020)
-
-# in base R, you can filter by:
-# storms[storms$year >= 1990 & storms$year <= 2010, ]
 
 # issue 1: the same storm has been recorded multiple times but I want to count it only once
 # solution 1: apply distinct()
 # issue 2: different storms with same names were presented in the data set: 
-# solution 2: group by year first before performing distinct() to keep the different storms with same names
+# solution 2: the storm name list usually contain do not repeat in the same year
+# so I can group by year and status first before performing distinct() to keep the different storms
 
-storms %>% 
-  filter(status == "tropical depression")
-  
-  
 
-  storms %>%
-  group_by(year) %>% 
-  filter(year >= 1990 & year <= 2010 & status == "tropical depression") %>% 
-  distinct(name, .keep_all = TRUE) %>% 
-  ungroup() %>% 
-  group_by(month)
 
-   %>% 
-  summarise(n = n())
+
+length(unique(storms$status))
+unique(storms$status)
+
+data = NULL
+for(i in 1:length(unique(storms$status))){
+  data[[i]] <- storms %>% 
+    # step 1: group by year and status first before performing distinct() 
+    # to keep the different storms with same names
+    group_by(year, status) %>% 
+    
+    # step 2: filter by year and storm status
+    filter(year >= 1990 & year <= 2010 & status == unique(storms$status)[i]) %>% 
+    # step 3: keep only one name for the same storm from same status
+    distinct(name, .keep_all = TRUE) %>% 
+    ungroup() %>% 
+    group_by(month) %>% 
+    summarise(n = n())
   
+}
+
+data
+
+# issue 3: the month without storm do not show in the tibble
+# solution: assign 0 to the month without storm
+
+vec = NULL
+df_ordered = NULL
+
+
+for(i in 1:length(data)){
+  # iterate through subset of data with different storm status
+  x = data[[i]]
   
-  
-  mutate(count(unique(name)))
  
+  for(j in 1:12) {
+    # put the month without storms into a vector 
+    if (j %in% x$month == F){
+      vec[j] <- j
+    } else {
+      
+    }
+    
+    vec <- vec[!is.na(vec)]
+    # assign 0 as n to the month without storms 
+    df <- data.frame(month = vec, n = rep(0, length(vec)))
+    # combine the new df with original tibble
+    df_new <- rbind(x,df)
+    # order the combined df by month
+    df_ordered[[i]] <- arrange(df_new, month)
 
+  }
+  
+}
 
+df_ordered
+
+df_ordered[[2]] <- distinct(df_ordered[[2]])
+
+# assign names to the list
+names(df_ordered) <- unique(storms$status)
+
+df_ordered
+
+library(ggplot2)
+
+# assign status to new column: status
+# use mutate() and cbind() to ordered df with new columns
+# combine three status df together
+a <- mutate(df_ordered[[1]], data.frame(status = names(df_ordered[1])))
+b <- mutate(df_ordered[[2]], data.frame(status = names(df_ordered[2])))
+c <- mutate(df_ordered[[3]], data.frame(status = names(df_ordered[3])))
+final_data <- rbind(a, b, c)
+
+# visualize accumulated storm number per month from 1990 to 2010
+ggplot(final_data, mapping = aes(x = month, y = n, color = status)) +
+  geom_point(size = 3) +
+  geom_line(size =1) +
+  theme_classic() +
+  labs(title ="Accumulated Storm Number Per Month From 1990 to 2010", 
+       x = "Month", y = "Storm Status",
+       color = "Storm Status") +
+  scale_x_continuous(limits = c(1, 12), breaks = seq(1, 12, by =1)) +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by =20)) +
+  theme(axis.text.x = element_text(face = "bold", size =12, color = "black"),
+        axis.text.y = element_text(face = "bold", size =12, color = "black"),
+        axis.title = element_text(face = "bold", size =14, color = "black"),
+        plot.title = element_text(face = "bold", hjust = 0.5, size=14),
+        legend.position = c(0.15,0.8),
+        legend.title = element_text(face = "bold", size = 12))
+
+# save the ggplot to a png
+ggsave("Accumulated Storm Per Month 1990 to 2010.png")
