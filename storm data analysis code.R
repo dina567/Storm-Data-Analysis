@@ -56,7 +56,7 @@ rownames(storms)
 # issue 1: the same storm has been recorded multiple times but I want to count it only once
 # solution 1: apply distinct()
 # issue 2: different storms with same names were presented in the data set: 
-# solution 2: the storm name list usually contain do not repeat in the same year
+# solution 2: the storm do not repeat in the same year
 # so I can group by year and status first before performing distinct() to keep the different storms
 
 
@@ -85,7 +85,7 @@ for(i in 1:length(unique(storms$status))){
 data
 
 # issue 3: the month without storm do not show in the tibble
-# solution: assign 0 to the month without storm
+# solution: assign 0 to the month without storms
 
 vec = NULL
 df_ordered = NULL
