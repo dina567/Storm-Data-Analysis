@@ -25,15 +25,17 @@
 
 ###
 # mutate() adds new variables/columns w/o removing the existing variables to/from a dataframe
-# transmute() adds new variables/columns + removing the existing variables 
+# transmute() adds new variables/columns + removing the existing variables used to create new variables
 # data type: a data frame or a tibble
-#syntax: mutate(data, )
-Usage
+# syntax: mutate(data, )
+
 # 1. Loading data and preview data
 # This data is a subset of the NOAA Atlantic hurricane database best track data, https://www.nhc.noaa.gov/data/#hurdat. 
 # The data includes the positions and attributes of storms from 1975-2020, measured every six hours during the lifetime of a storm.
 
+
 data() # see all the built-in dataset in R
+library(dplyr)
 data(storms) 
 head(storms)
 str(storms)
@@ -56,8 +58,29 @@ storms %>% filter(year >= 2000 & year <= 2020)
 # in base R, you can filter by:
 # storms[storms$year >= 1990 & storms$year <= 2010, ]
 
+# issue 1: the same storm has been recorded multiple times but I want to count it only once
+# solution 1: apply distinct()
+# issue 2: different storms with same names were presented in the data set: 
+# solution 2: group by year first before performing distinct() to keep the different storms with same names
+
 storms %>% 
-  filter(year >= 1990 & year <= 2010) %>% 
-  select(year, month,)
+  filter(status == "tropical depression")
+  
+  
+
+  storms %>%
+  group_by(year) %>% 
+  filter(year >= 1990 & year <= 2010 & status == "tropical depression") %>% 
+  distinct(name, .keep_all = TRUE) %>% 
+  ungroup() %>% 
+  group_by(month)
+
+   %>% 
+  summarise(n = n())
+  
+  
+  
+  mutate(count(unique(name)))
+ 
 
 
